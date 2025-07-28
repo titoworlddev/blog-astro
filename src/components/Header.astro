@@ -1,10 +1,16 @@
 ---
+import SearchDropdown from './SearchDropdown.astro';
+import { getAllPosts } from '../utils/posts';
+
 export interface Props {
 	title?: string;
 	showBackButton?: boolean;
 }
 
 const { title = "Tech Blog", showBackButton = false } = Astro.props;
+
+// Get all posts for search functionality
+const allPosts = await getAllPosts();
 ---
 
 <header class="header">
@@ -23,14 +29,16 @@ const { title = "Tech Blog", showBackButton = false } = Astro.props;
 			
 			<h1 class="page-title">{title}</h1>
 			
-			<a href="/buscar" class="search-icon" title="Buscar posts">
+			<button id="search-button" class="search-icon" title="Buscar posts">
 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 				</svg>
-			</a>
+			</button>
 		</nav>
 	</div>
 </header>
+
+<SearchDropdown />
 
 <style>
 	.header {
@@ -81,8 +89,10 @@ const { title = "Tech Blog", showBackButton = false } = Astro.props;
 	}
 
 	.search-icon {
+		background: none;
+		border: none;
 		color: #ffffff;
-		text-decoration: none;
+		cursor: pointer;
 		transition: all 0.3s ease;
 		padding: 0.5rem;
 		border-radius: 0.5rem;
@@ -103,3 +113,243 @@ const { title = "Tech Blog", showBackButton = false } = Astro.props;
 		height: 24px;
 	}
 </style>
+
+<script define:vars={{ allPosts }}>
+	// Search functionality
+	class SearchManager {
+		constructor() {
+			this.posts = allPosts;
+			this.searchDropdown = null;
+			this.searchInput = null;
+			this.searchResults = null;
+			this.currentResults = [];
+			this.selectedIndex = -1;
+			this.init();
+		}
+
+		init() {
+			// Wait for DOM to be ready
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
+			} else {
+				this.setupEventListeners();
+			}
+		}
+
+		setupEventListeners() {
+			this.searchDropdown = document.getElementById('search-dropdown');
+			this.searchInput = document.getElementById('search-input');
+			this.searchResults = document.getElementById('search-results');
+			
+			if (!this.searchDropdown || !this.searchInput || !this.searchResults) {
+				console.warn('Search elements not found');
+				return;
+			}
+
+			// Search button click
+			const searchButton = document.getElementById('search-button');
+			if (searchButton) {
+				searchButton.addEventListener('click', () => this.openSearch());
+			}
+
+			// Close button click
+			const searchClose = document.getElementById('search-close');
+			if (searchClose) {
+				searchClose.addEventListener('click', () => this.closeSearch());
+			}
+
+			// Overlay click to close
+			const searchOverlay = document.getElementById('search-overlay');
+			if (searchOverlay) {
+				searchOverlay.addEventListener('click', () => this.closeSearch());
+			}
+
+			// Input events
+			this.searchInput.addEventListener('input', (e) => this.handleInput(e));
+			this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+			// ESC key to close
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && !this.searchDropdown.classList.contains('hidden')) {
+					this.closeSearch();
+				}
+			});
+		}
+
+		openSearch() {
+			this.searchDropdown.classList.remove('hidden');
+			this.searchInput.focus();
+			document.body.style.overflow = 'hidden';
+		}
+
+		closeSearch() {
+			this.searchDropdown.classList.add('hidden');
+			this.searchInput.value = '';
+			this.currentResults = [];
+			this.selectedIndex = -1;
+			this.showPlaceholder();
+			document.body.style.overflow = '';
+		}
+
+		handleInput(e) {
+			const query = e.target.value.trim();
+			this.selectedIndex = -1;
+			
+			if (query.length === 0) {
+				this.showPlaceholder();
+				return;
+			}
+
+			if (query.length < 2) {
+				this.showMinLength();
+				return;
+			}
+
+			this.performSearch(query);
+		}
+
+		handleKeydown(e) {
+			if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				this.navigateResults(1);
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				this.navigateResults(-1);
+			} else if (e.key === 'Enter') {
+				e.preventDefault();
+				this.handleEnter();
+			}
+		}
+
+		navigateResults(direction) {
+			if (this.currentResults.length === 0) return;
+
+			this.selectedIndex += direction;
+			
+			if (this.selectedIndex < -1) {
+				this.selectedIndex = this.currentResults.length - 1;
+			} else if (this.selectedIndex >= this.currentResults.length) {
+				this.selectedIndex = -1;
+			}
+
+			this.updateSelection();
+		}
+
+		updateSelection() {
+			const items = this.searchResults.querySelectorAll('.search-result-item');
+			items.forEach((item, index) => {
+				if (index === this.selectedIndex) {
+					item.classList.add('highlighted');
+					item.scrollIntoView({ block: 'nearest' });
+				} else {
+					item.classList.remove('highlighted');
+				}
+			});
+		}
+
+		handleEnter() {
+			if (this.selectedIndex >= 0 && this.currentResults[this.selectedIndex]) {
+				// Navigate to selected post
+				const post = this.currentResults[this.selectedIndex];
+				window.location.href = `/blog/${post.id}`;
+			} else {
+				// Navigate to search page with query
+				const query = this.searchInput.value.trim();
+				if (query) {
+					window.location.href = `/buscar?q=${encodeURIComponent(query)}`;
+				}
+			}
+		}
+
+		performSearch(query) {
+			const lowercaseQuery = query.toLowerCase();
+			
+			this.currentResults = this.posts.filter(post => {
+				const title = post.data.title.toLowerCase();
+				const description = post.data.description.toLowerCase();
+				const category = post.data.category.toLowerCase();
+				
+				return title.includes(lowercaseQuery) || 
+				       description.includes(lowercaseQuery) || 
+				       category.includes(lowercaseQuery);
+			}).slice(0, 5); // Limit to 5 results
+
+			this.displayResults();
+		}
+
+		displayResults() {
+			if (this.currentResults.length === 0) {
+				this.showNoResults();
+				return;
+			}
+
+			const categoryNames = {
+				'desarrollo-web': 'Desarrollo Web',
+				'bases-de-datos': 'Bases de Datos',
+				'servidores': 'Servidores',
+				'cloud-computing': 'Cloud Computing',
+				'linea-de-comandos': 'Línea de Comandos',
+				'inteligencia-artificial': 'Inteligencia Artificial'
+			};
+
+			const html = this.currentResults.map(post => {
+				const categoryDisplayName = categoryNames[post.data.category] || post.data.category;
+				const formattedDate = new Date(post.data.pubDate).toLocaleDateString('es-ES', {
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric'
+				});
+
+				return `
+					<a href="/blog/${post.id}" class="search-result-item">
+						<div class="search-result-content">
+							<h3 class="search-result-title">${post.data.title}</h3>
+							<div class="search-result-meta">
+								<span class="search-result-category">${categoryDisplayName}</span>
+								<span class="search-result-date">${formattedDate}</span>
+							</div>
+						</div>
+					</a>
+				`;
+			}).join('');
+
+			this.searchResults.innerHTML = html;
+		}
+
+		showPlaceholder() {
+			this.searchResults.innerHTML = `
+				<div class="search-placeholder">
+					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					<p>Escribe para buscar posts...</p>
+				</div>
+			`;
+		}
+
+		showMinLength() {
+			this.searchResults.innerHTML = `
+				<div class="search-placeholder">
+					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					<p>Escribe al menos 2 caracteres...</p>
+				</div>
+			`;
+		}
+
+		showNoResults() {
+			this.searchResults.innerHTML = `
+				<div class="search-no-results">
+					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					<p>No se encontraron resultados</p>
+				</div>
+			`;
+		}
+	}
+
+	// Initialize search when page loads
+	new SearchManager();
+</script>

@@ -11,19 +11,48 @@ const searchQuery = url.searchParams.get('q') || '';
 // Get all posts for searching
 const allPosts = await getAllPosts();
 
+// Debug logging
+console.log('Search query:', searchQuery);
+console.log('Total posts available:', allPosts.length);
+console.log('Posts sample:', allPosts.slice(0, 2).map(p => ({ id: p.id, title: p.data.title, category: p.data.category })));
+
 // Filter posts based on search query
 let searchResults: CollectionEntry<'blog'>[] = [];
 if (searchQuery.trim()) {
 	const query = searchQuery.toLowerCase().trim();
+	console.log('Searching for:', query);
+	
 	searchResults = allPosts.filter(post => {
-		const title = post.data.title.toLowerCase();
-		const description = post.data.description.toLowerCase();
-		const category = post.data.category.toLowerCase();
+		if (!post || !post.data) {
+			console.warn('Invalid post:', post);
+			return false;
+		}
 		
-		return title.includes(query) || 
-		       description.includes(query) || 
-		       category.includes(query);
+		const title = String(post.data.title || '').toLowerCase();
+		const description = String(post.data.description || '').toLowerCase();
+		const category = String(post.data.category || '').toLowerCase();
+		
+		const titleMatch = title.includes(query);
+		const descMatch = description.includes(query);
+		const catMatch = category.includes(query);
+		
+		const matches = titleMatch || descMatch || catMatch;
+		
+		if (matches) {
+			console.log('Match found:', {
+				id: post.id,
+				title: post.data.title,
+				category: post.data.category,
+				titleMatch,
+				descMatch,
+				catMatch
+			});
+		}
+		
+		return matches;
 	});
+	
+	console.log('Search results:', searchResults.length);
 }
 ---
 
