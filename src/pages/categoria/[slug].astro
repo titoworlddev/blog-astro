@@ -67,6 +67,7 @@ const categoryPosts = await getPostsByCategory(category.slug);
 								description={post.data.description}
 								slug={`/blog/${post.id}`}
 								category={post.data.category}
+								pubDate={post.data.pubDate}
 								image={post.data.image}
 							/>
 						))}
