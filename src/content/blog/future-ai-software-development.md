@@ -1,6 +1,7 @@
 ---
 title: 'The Future of AI in Software Development'
 description: 'Explore how artificial intelligence is reshaping the landscape of software development, from automated testing to code generation.'
+category: 'inteligencia-artificial'
 pubDate: 'Jul 15 2024'
 image: '/public/images/2025/future-ai-software-development.png'
 ---

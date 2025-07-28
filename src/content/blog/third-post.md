@@ -1,6 +1,7 @@
 ---
 title: 'Third post'
 description: 'Lorem ipsum dolor sit amet'
+category: 'servidores'
 pubDate: 'Jul 22 2022'
 ---
 

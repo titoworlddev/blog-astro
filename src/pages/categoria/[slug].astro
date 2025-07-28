@@ -1,0 +1,202 @@
+---
+import { getCollection } from 'astro:content';
+import MainLayout from '../../layouts/MainLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+export async function getStaticPaths() {
+	const categories = [
+		{
+			name: "Desarrollo Web",
+			slug: "desarrollo-web"
+		},
+		{
+			name: "Bases de Datos",
+			slug: "bases-de-datos"
+		},
+		{
+			name: "Servidores",
+			slug: "servidores"
+		},
+		{
+			name: "Cloud Computing",
+			slug: "cloud-computing"
+		},
+		{
+			name: "Línea de Comandos",
+			slug: "linea-de-comandos"
+		},
+		{
+			name: "Inteligencia Artificial",
+			slug: "inteligencia-artificial"
+		}
+	];
+
+	return categories.map((category) => ({
+		params: { slug: category.slug },
+		props: { category },
+	}));
+}
+
+const { category } = Astro.props;
+
+// Get all blog posts for this category
+const allPosts = await getCollection('blog');
+
+// Filter posts by category with robust comparison
+const categoryPosts = allPosts
+	.filter(post => {
+		if (!post.data.category) return false;
+		
+		const postCategory = String(post.data.category).trim().toLowerCase();
+		const targetCategory = String(category.slug).trim().toLowerCase();
+		
+		// Also try without quotes in case they're included
+		const cleanPostCategory = postCategory.replace(/['"`]/g, '');
+		const cleanTargetCategory = targetCategory.replace(/['"`]/g, '');
+		
+		return cleanPostCategory === cleanTargetCategory;
+	})
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Debug info (will show in browser console)
+if (typeof window !== 'undefined') {
+	console.log('Category:', category.slug);
+	console.log('Total posts:', allPosts.length);
+	console.log('Filtered posts:', categoryPosts.length);
+	console.log('Posts with categories:', allPosts.map(p => ({ id: p.id, category: p.data.category })));
+}
+---
+
+<MainLayout 
+	title={`${category.name} - Tech Blog`} 
+	description={`Artículos sobre ${category.name}`} 
+	pageTitle={category.name}
+	showBackButton={true}
+>
+	<div class="category-page">
+		<div class="container">
+			<section class="category-intro">
+				<h2>Artículos sobre {category.name}</h2>
+				<p class="category-description">
+					Explora nuestros artículos más recientes sobre {category.name.toLowerCase()}.
+				</p>
+			</section>
+
+			{categoryPosts.length > 0 ? (
+				<section class="posts-section">
+					<div class="posts-grid">
+						{categoryPosts.map(post => (
+							<PostCard 
+								title={post.data.title}
+								description={post.data.description}
+								slug={`/blog/${post.id}`}
+								image={post.data.image}
+							/>
+						))}
+					</div>
+				</section>
+			) : (
+				<section class="no-posts">
+					<div class="no-posts-content">
+						<h3>No hay artículos disponibles</h3>
+						<p>Aún no hemos publicado artículos en esta categoría. ¡Vuelve pronto para ver nuevo contenido!</p>
+						<a href="/" class="btn-home">Volver al inicio</a>
+					</div>
+				</section>
+			)}
+		</div>
+	</div>
+</MainLayout>
+
+<style>
+	.category-page {
+		min-height: 100vh;
+		padding: 2rem 0 4rem 0;
+	}
+
+	.category-intro {
+		text-align: center;
+		margin-bottom: 3rem;
+	}
+
+	.category-intro h2 {
+		color: #ffffff;
+		font-size: 2rem;
+		font-weight: 600;
+		margin-bottom: 1rem;
+	}
+
+	.category-description {
+		color: #cccccc;
+		font-size: 1.1rem;
+		max-width: 600px;
+		margin: 0 auto;
+		line-height: 1.6;
+	}
+
+	.posts-section {
+		padding-bottom: 2rem;
+	}
+
+	.posts-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+
+	.no-posts {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 400px;
+	}
+
+	.no-posts-content {
+		text-align: center;
+		max-width: 500px;
+	}
+
+	.no-posts-content h3 {
+		color: #ffffff;
+		font-size: 1.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.no-posts-content p {
+		color: #cccccc;
+		margin-bottom: 2rem;
+		line-height: 1.6;
+	}
+
+	.btn-home {
+		display: inline-block;
+		padding: 0.75rem 1.5rem;
+		background-color: #4fd1c7;
+		color: #1a1a1a;
+		border-radius: 0.5rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: all 0.3s ease;
+	}
+
+	.btn-home:hover {
+		background-color: #6ee7dd;
+		transform: translateY(-2px);
+	}
+
+	@media (max-width: 768px) {
+		.posts-grid {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+		
+		.category-intro h2 {
+			font-size: 1.5rem;
+		}
+		
+		.category-description {
+			font-size: 1rem;
+		}
+	}
+</style>

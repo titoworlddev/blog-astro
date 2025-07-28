@@ -1,6 +1,7 @@
 ---
 title: 'First post'
 description: 'Lorem ipsum dolor sit amet'
+category: 'desarrollo-web'
 pubDate: 'Jul 08 2022'
 ---
 

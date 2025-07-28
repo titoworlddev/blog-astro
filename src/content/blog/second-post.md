@@ -1,6 +1,7 @@
 ---
 title: 'Second post'
 description: 'Lorem ipsum dolor sit amet'
+category: 'bases-de-datos'
 pubDate: 'Jul 15 2022'
 ---
 

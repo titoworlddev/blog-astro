@@ -8,6 +8,7 @@ import FormattedDate from '../components/FormattedDate.astro';
 export interface Props {
 	title: string;
 	description: string;
+	category: string;
 	pubDate: Date;
 	updatedDate?: Date;
 	image?: {
@@ -18,7 +19,19 @@ export interface Props {
 	};
 }
 
-const { title, description, pubDate, updatedDate, image } = Astro.props;
+const { title, description, category, pubDate, updatedDate, image } = Astro.props;
+
+// Map category slug to display name
+const categoryNames: Record<string, string> = {
+	'desarrollo-web': 'Desarrollo Web',
+	'bases-de-datos': 'Bases de Datos',
+	'servidores': 'Servidores',
+	'cloud-computing': 'Cloud Computing',
+	'linea-de-comandos': 'Línea de Comandos',
+	'inteligencia-artificial': 'Inteligencia Artificial'
+};
+
+const categoryDisplayName = categoryNames[category] || category;
 ---
 
 <!doctype html>
@@ -39,6 +52,11 @@ const { title, description, pubDate, updatedDate, image } = Astro.props;
 					)}
 					
 					<div class="post-header">
+						<div class="post-category">
+							<a href={`/categoria/${category}`} class="category-link">
+								{categoryDisplayName}
+							</a>
+						</div>
 						<h1 class="post-title">{title}</h1>
 						<div class="post-meta">
 							<FormattedDate date={pubDate} />
@@ -84,6 +102,28 @@ const { title, description, pubDate, updatedDate, image } = Astro.props;
 	.post-header {
 		margin-bottom: 2rem;
 		text-align: center;
+	}
+
+	.post-category {
+		margin-bottom: 1rem;
+	}
+
+	.category-link {
+		display: inline-block;
+		padding: 0.5rem 1rem;
+		background-color: #4fd1c7;
+		color: #1a1a1a;
+		border-radius: 2rem;
+		font-size: 0.9rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: all 0.3s ease;
+	}
+
+	.category-link:hover {
+		background-color: #6ee7dd;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(79, 209, 199, 0.3);
 	}
 
 	.post-title {
