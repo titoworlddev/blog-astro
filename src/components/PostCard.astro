@@ -3,7 +3,12 @@ export interface Props {
 	title: string;
 	description: string;
 	slug: string;
-	image?: string;
+	image?: {
+		src: string;
+		width: number;
+		height: number;
+		format: string;
+	};
 }
 
 const { title, description, slug, image } = Astro.props;
@@ -12,7 +17,7 @@ const { title, description, slug, image } = Astro.props;
 <article class="post-card">
 	<div class="post-image">
 		{image ? (
-			<img src={image} alt={title} />
+			<img src={image.src} alt={title} />
 		) : (
 			<div class="placeholder-image">
 				<svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,7 +30,7 @@ const { title, description, slug, image } = Astro.props;
 	<div class="post-content">
 		<h3 class="post-title">{title}</h3>
 		<p class="post-description">{description}</p>
-		<a href={`/posts/${slug}`} class="btn read-more">Read More</a>
+		<a href={slug} class="btn read-more">Read More</a>
 	</div>
 </article>
 

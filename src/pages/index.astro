@@ -2,46 +2,28 @@
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import MainLayout from '../layouts/MainLayout.astro';
 import PostCard from '../components/PostCard.astro';
+import { getCollection } from 'astro:content';
 
-// Posts de ejemplo que coinciden con el diseño de Figma
-const posts = [
-	{
-		title: "The Future of AI in Software Development",
-		description: "Explore how artificial intelligence is reshaping the landscape of software development, from automated testing to code generation.",
-		slug: "future-ai-software-development",
-		image: undefined
-	},
-	{
-		title: "Mastering Modern Web Frameworks",
-		description: "A comprehensive guide to the most popular web frameworks, including React, Vue, and Angular.",
-		slug: "mastering-modern-web-frameworks",
-		image: undefined
-	},
-	{
-		title: "Building Scalable APIs with Node.js",
-		description: "Learn best practices for creating robust and scalable APIs using Node.js and modern development patterns.",
-		slug: "building-scalable-apis-nodejs",
-		image: undefined
-	},
-	{
-		title: "The Rise of WebAssembly",
-		description: "Discover how WebAssembly is revolutionizing web performance and opening new possibilities for web applications.",
-		slug: "rise-of-webassembly",
-		image: undefined
-	}
-];
+// Get all blog posts
+const allPosts = await getCollection('blog');
+// Sort posts by publication date (newest first)
+const posts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<MainLayout title={SITE_TITLE} description={SITE_DESCRIPTION} pageTitle="Latest Posts">
+<MainLayout title={SITE_TITLE} description={SITE_DESCRIPTION} pageTitle="Tech Blog">
 	<div class="container">
+		<section class="hero">
+			<h2 class="section-title">Latest Posts</h2>
+		</section>
+		
 		<section class="posts-section">
 			<div class="posts-grid">
 				{posts.map(post => (
 					<PostCard 
-						title={post.title}
-						description={post.description}
-						slug={post.slug}
-						image={post.image}
+						title={post.data.title}
+						description={post.data.description}
+						slug={`/blog/${post.id}`}
+						image={post.data.image}
 					/>
 				))}
 			</div>
@@ -50,8 +32,20 @@ const posts = [
 </MainLayout>
 
 <style>
+	.hero {
+		padding: 2rem 0;
+		text-align: center;
+	}
+
+	.section-title {
+		color: #ffffff;
+		font-size: 2rem;
+		font-weight: 600;
+		margin-bottom: 0;
+	}
+
 	.posts-section {
-		padding: 2rem 0 4rem 0;
+		padding-bottom: 4rem;
 	}
 
 	.posts-grid {
