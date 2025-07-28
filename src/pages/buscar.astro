@@ -1,43 +1,14 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
-import PostCard from '../components/PostCard.astro';
 import { getAllPosts } from '../utils/posts';
-import type { CollectionEntry } from 'astro:content';
 
-// Get search query from URL parameters
-const searchQuery = Astro.url.searchParams.get('q')?.trim() || '';
-
-// Debug the search query
-console.log('DEBUG: Raw URL:', Astro.url.href);
-console.log('DEBUG: searchQuery value:', JSON.stringify(searchQuery));
-console.log('DEBUG: searchQuery length:', searchQuery.length);
-console.log('DEBUG: searchQuery truthy?', !!searchQuery);
-
-// Get all posts using the same function as Header (this works!)
-const sortedPosts = await getAllPosts();
-
-// Filter posts based on search query
-let searchResults: CollectionEntry<'blog'>[] = [];
-let hasSearched = false;
-
-if (searchQuery && searchQuery.length > 0) {
-	hasSearched = true;
-	const query = searchQuery.toLowerCase();
-	searchResults = sortedPosts.filter(post => {
-		const title = post.data.title.toLowerCase();
-		const description = post.data.description.toLowerCase();
-		const category = post.data.category.toLowerCase();
-		
-		return title.includes(query) || 
-		       description.includes(query) || 
-		       category.includes(query);
-	});
-}
+// Get all posts for client-side search
+const allPosts = await getAllPosts();
 ---
 
 <MainLayout 
-	title={`Buscar: ${searchQuery} - Tech Blog`} 
-	description={`Resultados de búsqueda para "${searchQuery}"`} 
+	title="Buscar - Tech Blog" 
+	description="Busca posts en el blog por título, descripción o categoría" 
 	pageTitle="Buscar"
 	showBackButton={true}
 >
@@ -46,18 +17,13 @@ if (searchQuery && searchQuery.length > 0) {
 			<section class="search-section">
 				<div class="search-header">
 					<h2>Resultados de búsqueda</h2>
-					{hasSearched && (
-						<p class="search-query">
-							Buscando: <strong>"{searchQuery}"</strong>
-						</p>
-					)}
+					<p class="search-query" style="display: none;">
+						Buscando: <strong id="search-query-text"></strong>
+					</p>
 					<!-- DEBUG INFO -->
-					<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+					<div id="debug-info" style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; color: black;">
 						<strong>DEBUG:</strong><br/>
-						Query: "{searchQuery}"<br/>
-						Has Searched: {hasSearched}<br/>
-						Results Count: {searchResults.length}<br/>
-						Total Posts: {sortedPosts.length}
+						Cargando...
 					</div>
 				</div>
 
@@ -65,10 +31,10 @@ if (searchQuery && searchQuery.length > 0) {
 					<form class="search-form" method="GET" action="/buscar">
 						<div class="search-input-group">
 							<input 
+								id="search-input"
 								type="text" 
 								name="q" 
 								placeholder="Buscar posts..." 
-								value={searchQuery}
 								class="search-input"
 								autofocus
 							/>
@@ -81,167 +47,133 @@ if (searchQuery && searchQuery.length > 0) {
 					</form>
 				</div>
 
-				{hasSearched ? (
-					<div class="search-results">
-						{searchResults.length > 0 ? (
-							<>
-								<p class="results-count">
-									{searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} encontrado{searchResults.length !== 1 ? 's' : ''}
-								</p>
-								<div class="posts-grid">
-									{searchResults.map(post => (
-										<PostCard 
-											title={post.data.title}
-											description={post.data.description}
-											slug={`/blog/${post.id}`}
-											category={post.data.category}
-											pubDate={post.data.pubDate}
-											image={post.data.image}
-										/>
-									))}
-								</div>
-							</>
-						) : (
-							<div class="no-results">
-								<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								</svg>
-								<h3>No se encontraron resultados</h3>
-								<p>Intenta con otros términos de búsqueda</p>
-							</div>
-						)}
-					</div>
-				) : (
+				<div id="search-results-container">
 					<div class="search-placeholder">
 						<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5 2C5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 						</svg>
 						<h3>¿Qué estás buscando?</h3>
 						<p>Busca posts por título, descripción o categoría</p>
 					</div>
-				)}
+				</div>
 			</section>
 		</div>
 	</div>
 </MainLayout>
 
-<script>
-	// Client-side search implementation
+<script define:vars={{ allPosts }}>
+	// Client-side search functionality
 	document.addEventListener('DOMContentLoaded', function() {
+		const searchInput = document.getElementById('search-input');
+		const searchQueryText = document.getElementById('search-query-text');
+		const searchQuerySection = document.querySelector('.search-query');
+		const debugInfo = document.getElementById('debug-info');
+		const resultsContainer = document.getElementById('search-results-container');
+		
+		// Get search query from URL
 		const urlParams = new URLSearchParams(window.location.search);
-		const clientQuery = urlParams.get('q');
+		const searchQuery = urlParams.get('q')?.trim() || '';
 		
-		console.log('Client-side query:', clientQuery);
+		// Update debug info
+		debugInfo.innerHTML = `
+			<strong>DEBUG:</strong><br/>
+			Full URL: ${window.location.href}<br/>
+			Search Params: ${window.location.search}<br/>
+			Query: "${searchQuery}"<br/>
+			Query Length: ${searchQuery.length}<br/>
+			Total Posts: ${allPosts.length}
+		`;
 		
-		if (clientQuery && clientQuery.trim()) {
-			performClientSearch(clientQuery.trim());
+		// Set search input value
+		if (searchInput) {
+			searchInput.value = searchQuery;
+		}
+		
+		// Perform search if there's a query
+		if (searchQuery && searchQuery.length > 0) {
+			performSearch(searchQuery);
 		}
 	});
 	
-	function performClientSearch(query: string): void {
-		console.log('Performing client-side search for:', query);
-		
-		// Update search input
-		const searchInput = document.querySelector('input[name="q"]') as HTMLInputElement;
-		if (searchInput) {
-			searchInput.value = query;
-		}
-		
-		// Update debug info
-		const debugDiv = document.querySelector('.debug-info') as HTMLElement;
-		if (debugDiv) {
-			debugDiv.innerHTML = `
-				<strong>DEBUG (Client-side):</strong><br/>
-				Query: "${query}"<br/>
-				Has Searched: true<br/>
-				Results Count: <span id="results-count">Searching...</span><br/>
-				Total Posts: <span id="total-posts">Loading...</span>
-			`;
-		}
+	function performSearch(query) {
+		const searchQueryText = document.getElementById('search-query-text');
+		const searchQuerySection = document.querySelector('.search-query');
+		const debugInfo = document.getElementById('debug-info');
+		const resultsContainer = document.getElementById('search-results-container');
 		
 		// Show search query
-		const queryDisplay = document.querySelector('.search-query strong');
-		if (queryDisplay) {
-			queryDisplay.textContent = `"${query}"`;
+		if (searchQueryText) {
+			searchQueryText.textContent = `"${query}"`;
 		}
-		
-		// Show search query section
-		const searchQuerySection = document.querySelector('.search-query') as HTMLElement;
 		if (searchQuerySection) {
 			searchQuerySection.style.display = 'block';
 		}
 		
-		// Fetch posts and perform search
-		fetch('/api/posts.json')
-			.then(response => response.json())
-			.then((posts: any[]) => {
-				console.log('Loaded posts for client search:', posts.length);
-				
-				// Update total posts count
-				const totalPostsSpan = document.getElementById('total-posts');
-				if (totalPostsSpan) totalPostsSpan.textContent = posts.length.toString();
-				
-				// Filter posts
-				const queryLower = query.toLowerCase();
-				const results = posts.filter((post: any) => {
-					return post.data.title.toLowerCase().includes(queryLower) ||
-					       post.data.description.toLowerCase().includes(queryLower) ||
-					       post.data.category.toLowerCase().includes(queryLower);
-				});
-				
-				console.log('Client search results:', results.length);
-				
-				// Update results count
-				const resultsCountSpan = document.getElementById('results-count');
-				if (resultsCountSpan) resultsCountSpan.textContent = results.length.toString();
-				
-				// Display results
-				displaySearchResults(results);
-			})
-			.catch(error => {
-				console.error('Error fetching posts:', error);
-				// Show error message
-				const resultsCountSpan = document.getElementById('results-count');
-				if (resultsCountSpan) resultsCountSpan.textContent = 'Error';
-			});
+		// Filter posts
+		const queryLower = query.toLowerCase();
+		const results = allPosts.filter(post => {
+			const title = post.data.title.toLowerCase();
+			const description = post.data.description.toLowerCase();
+			const category = post.data.category.toLowerCase();
+			
+			return title.includes(queryLower) || 
+			       description.includes(queryLower) || 
+			       category.includes(queryLower);
+		});
+		
+		// Update debug info
+		debugInfo.innerHTML = `
+			<strong>DEBUG:</strong><br/>
+			Full URL: ${window.location.href}<br/>
+			Search Params: ${window.location.search}<br/>
+			Query: "${query}"<br/>
+			Query Length: ${query.length}<br/>
+			Results Found: ${results.length}<br/>
+			Total Posts: ${allPosts.length}
+		`;
+		
+		// Display results
+		displayResults(results);
 	}
 	
-	function displaySearchResults(results: any[]): void {
-		const placeholder = document.querySelector('.search-placeholder') as HTMLElement;
-		const existingResults = document.querySelector('.search-results');
-		
-		// Remove placeholder
-		if (placeholder) placeholder.style.display = 'none';
-		
-		// Remove existing results
-		if (existingResults) existingResults.remove();
-		
-		// Create results container
-		const resultsContainer = document.createElement('div');
-		resultsContainer.className = 'search-results';
+	function displayResults(results) {
+		const resultsContainer = document.getElementById('search-results-container');
 		
 		if (results.length > 0) {
 			resultsContainer.innerHTML = `
-				<p class="results-count">
-					${results.length} resultado${results.length !== 1 ? 's' : ''} encontrado${results.length !== 1 ? 's' : ''}
-				</p>
-				<div class="posts-grid">
-					${results.map((post: any) => `
-						<article class="post-card">
-							<a href="/blog/${post.id}" class="post-link">
-								<div class="post-content">
-									<h3 class="post-title">${post.data.title}</h3>
-									<p class="post-description">${post.data.description}</p>
-									<div class="post-meta">
-										<span class="post-category">
-											<a href="/categoria/${post.data.category}">${post.data.category}</a>
-										</span>
-										<span class="post-date">${new Date(post.data.pubDate).toLocaleDateString('es-ES')}</span>
+				<div class="search-results">
+					<p class="results-count">
+						${results.length} resultado${results.length !== 1 ? 's' : ''} encontrado${results.length !== 1 ? 's' : ''}
+					</p>
+					<div class="posts-grid">
+						${results.map(post => `
+							<article class="post-card">
+								<a href="/blog/${post.id}" class="post-link">
+									${post.data.image ? 
+										`<div class="post-image">
+											<img src="${post.data.image}" alt="${post.data.title}" />
+										</div>` : 
+										`<div class="post-image placeholder-image">
+											<svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
+											</svg>
+										</div>`
+									}
+									<div class="post-content">
+										<div class="post-meta">
+											<span class="post-category">
+												<a href="/categoria/${post.data.category}" class="category-tag">${post.data.category}</a>
+											</span>
+											<span class="post-date">${new Date(post.data.pubDate).toLocaleDateString('es-ES')}</span>
+										</div>
+										<h3 class="post-title">${post.data.title}</h3>
+										<p class="post-description">${post.data.description}</p>
+										<span class="read-more">Leer más</span>
 									</div>
-								</div>
-							</a>
-						</article>
-					`).join('')}
+								</a>
+							</article>
+						`).join('')}
+					</div>
 				</div>
 			`;
 		} else {
@@ -254,12 +186,6 @@ if (searchQuery && searchQuery.length > 0) {
 					<p>Intenta con otros términos de búsqueda</p>
 				</div>
 			`;
-		}
-		
-		// Insert results after the search form
-		const searchForm = document.querySelector('.search-form-container');
-		if (searchForm) {
-			searchForm.insertAdjacentElement('afterend', resultsContainer);
 		}
 	}
 </script>
@@ -400,6 +326,113 @@ if (searchQuery && searchQuery.length > 0) {
 		margin: 0;
 	}
 
+	/* PostCard styles for search results */
+	.post-card {
+		background-color: #2a2a2a;
+		border-radius: 1rem;
+		overflow: hidden;
+		transition: transform 0.3s ease, box-shadow 0.3s ease;
+		border: 1px solid #333;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.post-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 10px 30px rgba(79, 209, 199, 0.1);
+	}
+
+	.post-link {
+		text-decoration: none;
+		color: inherit;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.post-image {
+		width: 100%;
+		height: 200px;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.post-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.placeholder-image {
+		background-color: #1a1a1a;
+		color: #666;
+	}
+
+	.post-content {
+		padding: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+	}
+
+	.post-meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+		font-size: 0.875rem;
+	}
+
+	.category-tag {
+		background-color: #4fd1c7;
+		color: #1a1a1a;
+		padding: 0.25rem 0.75rem;
+		border-radius: 1rem;
+		font-weight: 500;
+		text-decoration: none;
+		font-size: 0.75rem;
+		transition: background-color 0.3s ease;
+	}
+
+	.category-tag:hover {
+		background-color: #6ee7dd;
+	}
+
+	.post-date {
+		color: #888;
+	}
+
+	.post-title {
+		color: #ffffff;
+		font-size: 1.25rem;
+		font-weight: 600;
+		margin-bottom: 0.75rem;
+		line-height: 1.4;
+	}
+
+	.post-description {
+		color: #cccccc;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		margin-bottom: 1.5rem;
+		flex-grow: 1;
+	}
+
+	.read-more {
+		color: #4fd1c7;
+		font-weight: 500;
+		font-size: 0.875rem;
+		transition: color 0.3s ease;
+		margin-top: auto;
+	}
+
+	.post-link:hover .read-more {
+		color: #6ee7dd;
+	}
+
 	@media (max-width: 768px) {
 		.posts-grid {
 			grid-template-columns: 1fr;
@@ -413,6 +446,12 @@ if (searchQuery && searchQuery.length > 0) {
 		.search-input,
 		.search-button {
 			padding: 0.75rem;
+		}
+
+		.post-meta {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.5rem;
 		}
 	}
 </style>
