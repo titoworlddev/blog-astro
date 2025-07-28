@@ -34,6 +34,19 @@ import Image from 'astro/components/Image.astro';
 						Mi objetivo es contagiarte esa misma pasión y crear una comunidad donde podamos 
 						compartir esa fascinación por las posibilidades que nos ofrece la tecnología.
 					</p>
+					
+					<div class="contact-section">
+						<p>
+							¿Te gustaría conectar conmigo? ¡Me encantaría conocer tu perspectiva!
+						</p>
+						<a href="/contacto" class="contact-button">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								<polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+							Contáctame
+						</a>
+					</div>
 				</div>
 			</section>
 		</div>
@@ -149,6 +162,44 @@ import Image from 'astro/components/Image.astro';
 
 	.profile-description p:last-child {
 		margin-bottom: 0;
+	}
+
+	.contact-section {
+		margin-top: 2rem;
+		padding-top: 2rem;
+		border-top: 1px solid #333;
+		text-align: center;
+	}
+
+	.contact-section p {
+		margin-bottom: 1.5rem;
+		color: #cccccc;
+		font-size: 1rem;
+	}
+
+	.contact-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1.5rem;
+		background: linear-gradient(135deg, #4fd1c7, #3b9b91);
+		color: #1a1a1a;
+		text-decoration: none;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		transition: all 0.3s ease;
+		box-shadow: 0 2px 8px rgba(79, 209, 199, 0.3);
+	}
+
+	.contact-button:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 16px rgba(79, 209, 199, 0.4);
+		background: linear-gradient(135deg, #5de2d6, #4fd1c7);
+	}
+
+	.contact-button svg {
+		width: 20px;
+		height: 20px;
 	}
 
 	@media (max-width: 768px) {
