@@ -3,6 +3,7 @@ export interface Props {
 	title: string;
 	description: string;
 	slug: string;
+	category: string;
 	image?: {
 		src: string;
 		width: number;
@@ -11,7 +12,19 @@ export interface Props {
 	};
 }
 
-const { title, description, slug, image } = Astro.props;
+const { title, description, slug, category, image } = Astro.props;
+
+// Map category slug to display name
+const categoryNames: Record<string, string> = {
+	'desarrollo-web': 'Desarrollo Web',
+	'bases-de-datos': 'Bases de Datos',
+	'servidores': 'Servidores',
+	'cloud-computing': 'Cloud Computing',
+	'linea-de-comandos': 'Línea de Comandos',
+	'inteligencia-artificial': 'Inteligencia Artificial'
+};
+
+const categoryDisplayName = categoryNames[category] || category;
 ---
 
 <article class="post-card">
@@ -28,6 +41,11 @@ const { title, description, slug, image } = Astro.props;
 	</div>
 	
 	<div class="post-content">
+		<div class="post-category">
+			<a href={`/categoria/${category}`} class="category-tag">
+				{categoryDisplayName}
+			</a>
+		</div>
 		<h3 class="post-title">{title}</h3>
 		<p class="post-description">{description}</p>
 		<a href={slug} class="btn read-more">Read More</a>
@@ -79,6 +97,32 @@ const { title, description, slug, image } = Astro.props;
 
 	.post-content {
 		padding: 1.5rem;
+	}
+
+	.post-category {
+		margin-bottom: 0.75rem;
+	}
+
+	.category-tag {
+		display: inline-block;
+		padding: 0.25rem 0.75rem;
+		background-color: rgba(79, 209, 199, 0.1);
+		color: #4fd1c7;
+		border: 1px solid rgba(79, 209, 199, 0.3);
+		border-radius: 1rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: all 0.3s ease;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.category-tag:hover {
+		background-color: #4fd1c7;
+		color: #1a1a1a;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(79, 209, 199, 0.3);
 	}
 
 	.post-title {
