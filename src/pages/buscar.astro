@@ -1,0 +1,263 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getAllPosts } from '../utils/posts';
+import type { CollectionEntry } from 'astro:content';
+
+// Get search query from URL parameters
+const url = Astro.url;
+const searchQuery = url.searchParams.get('q') || '';
+
+// Get all posts for searching
+const allPosts = await getAllPosts();
+
+// Filter posts based on search query
+let searchResults: CollectionEntry<'blog'>[] = [];
+if (searchQuery.trim()) {
+	const query = searchQuery.toLowerCase().trim();
+	searchResults = allPosts.filter(post => {
+		const title = post.data.title.toLowerCase();
+		const description = post.data.description.toLowerCase();
+		const category = post.data.category.toLowerCase();
+		
+		return title.includes(query) || 
+		       description.includes(query) || 
+		       category.includes(query);
+	});
+}
+---
+
+<MainLayout 
+	title={`Buscar: ${searchQuery} - Tech Blog`} 
+	description={`Resultados de búsqueda para "${searchQuery}"`} 
+	pageTitle="Buscar"
+	showBackButton={true}
+>
+	<div class="search-page">
+		<div class="container">
+			<section class="search-section">
+				<div class="search-header">
+					<h2>Resultados de búsqueda</h2>
+					{searchQuery && (
+						<p class="search-query">
+							Buscando: <strong>"{searchQuery}"</strong>
+						</p>
+					)}
+				</div>
+
+				<div class="search-form-container">
+					<form class="search-form" method="GET" action="/buscar">
+						<div class="search-input-group">
+							<input 
+								type="text" 
+								name="q" 
+								placeholder="Buscar posts..." 
+								value={searchQuery}
+								class="search-input"
+								autofocus
+							/>
+							<button type="submit" class="search-button">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+							</button>
+						</div>
+					</form>
+				</div>
+
+				{searchQuery ? (
+					<div class="search-results">
+						{searchResults.length > 0 ? (
+							<>
+								<p class="results-count">
+									{searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} encontrado{searchResults.length !== 1 ? 's' : ''}
+								</p>
+								<div class="posts-grid">
+									{searchResults.map(post => (
+										<PostCard 
+											title={post.data.title}
+											description={post.data.description}
+											slug={`/blog/${post.id}`}
+											category={post.data.category}
+											pubDate={post.data.pubDate}
+											image={post.data.image}
+										/>
+									))}
+								</div>
+							</>
+						) : (
+							<div class="no-results">
+								<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+								<h3>No se encontraron resultados</h3>
+								<p>Intenta con otros términos de búsqueda</p>
+							</div>
+						)}
+					</div>
+				) : (
+					<div class="search-placeholder">
+						<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5 2C5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+						<h3>¿Qué estás buscando?</h3>
+						<p>Busca posts por título, descripción o categoría</p>
+					</div>
+				)}
+			</section>
+		</div>
+	</div>
+</MainLayout>
+
+<style>
+	.search-page {
+		min-height: 100vh;
+		padding-top: 1rem;
+	}
+
+	.search-section {
+		padding: 0 1rem;
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.search-header {
+		text-align: center;
+		margin-bottom: 2rem;
+	}
+
+	.search-header h2 {
+		color: #ffffff;
+		font-size: 1.75rem;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+
+	.search-query {
+		color: #cccccc;
+		font-size: 1rem;
+		margin: 0;
+	}
+
+	.search-query strong {
+		color: #4fd1c7;
+	}
+
+	.search-form-container {
+		max-width: 600px;
+		margin: 0 auto 2rem auto;
+	}
+
+	.search-input-group {
+		display: flex;
+		gap: 0;
+		background-color: #2a2a2a;
+		border: 1px solid #333;
+		border-radius: 0.5rem;
+		overflow: hidden;
+		transition: border-color 0.3s ease;
+	}
+
+	.search-input-group:focus-within {
+		border-color: #4fd1c7;
+		box-shadow: 0 0 0 3px rgba(79, 209, 199, 0.1);
+	}
+
+	.search-input {
+		flex: 1;
+		background: none;
+		border: none;
+		padding: 1rem;
+		color: #ffffff;
+		font-size: 1rem;
+		outline: none;
+	}
+
+	.search-input::placeholder {
+		color: #888;
+	}
+
+	.search-button {
+		background-color: #4fd1c7;
+		color: #1a1a1a;
+		border: none;
+		padding: 1rem;
+		cursor: pointer;
+		transition: background-color 0.3s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 60px;
+	}
+
+	.search-button:hover {
+		background-color: #6ee7dd;
+	}
+
+	.search-button svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.search-results {
+		margin-top: 2rem;
+	}
+
+	.results-count {
+		color: #cccccc;
+		font-size: 0.9rem;
+		margin-bottom: 1.5rem;
+		text-align: center;
+	}
+
+	.posts-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+		gap: 2rem;
+	}
+
+	.no-results,
+	.search-placeholder {
+		text-align: center;
+		padding: 3rem 1rem;
+		color: #888;
+	}
+
+	.no-results svg,
+	.search-placeholder svg {
+		width: 64px;
+		height: 64px;
+		margin-bottom: 1rem;
+		opacity: 0.5;
+	}
+
+	.no-results h3,
+	.search-placeholder h3 {
+		color: #cccccc;
+		font-size: 1.25rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.no-results p,
+	.search-placeholder p {
+		color: #888;
+		font-size: 1rem;
+		margin: 0;
+	}
+
+	@media (max-width: 768px) {
+		.posts-grid {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+
+		.search-header h2 {
+			font-size: 1.5rem;
+		}
+
+		.search-input,
+		.search-button {
+			padding: 0.75rem;
+		}
+	}
+</style>
