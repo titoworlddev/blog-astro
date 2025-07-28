@@ -1,0 +1,190 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Image from 'astro/components/Image.astro';
+---
+
+<MainLayout title="Acerca de - Cristian Arias" description="Conoce más sobre Cristian Arias, Desarrollador FullStack">
+	<div class="about-page">
+		<div class="container">
+			<header class="page-header">
+				<a href="/" class="back-button">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</a>
+				<h1>Acerca de</h1>
+			</header>
+
+			<section class="profile-section">
+				<div class="profile-image">
+					<Image src="https://avatars.githubusercontent.com/u/70041483?s=400&u=920f20b4c3794b21563fb9d139c38ce5870d63f9&v=4" alt="Cristian Arias" width={150} height={150} />
+				</div>
+				
+				<div class="profile-info">
+					<h2>Cristian Arias</h2>
+					<p class="subtitle">Desarrollador FullStack</p>
+					<p class="tagline">Explorando las infinitas posibilidades del mundo digital</p>
+				</div>
+
+				<div class="profile-description">
+					<p>
+						Siempre me ha fascinado cómo la tecnología puede transformar ideas en realidad. 
+						Ese momento mágico cuando el código cobra vida, cuando una aplicación resuelve un problema real, 
+						o cuando descubres algo nuevo... eso es lo que me enamoró de este mundo.
+					</p>
+					
+					<p>
+						Este blog nace de esa pasión genuina por compartir la emoción que siento al descubrir 
+						cosas nuevas en el universo tecnológico. Aquí encontrarás reflexiones, descubrimientos 
+						y esa curiosidad constante que me impulsa a seguir explorando.
+					</p>
+					
+					<p>
+						Mi objetivo es contagiarte esa misma pasión y crear una comunidad donde podamos 
+						compartir esa fascinación por las posibilidades que nos ofrece la tecnología.
+					</p>
+				</div>
+			</section>
+		</div>
+	</div>
+</MainLayout>
+
+<style>
+	.about-page {
+		min-height: 100vh;
+		padding-top: 1rem;
+	}
+
+	.page-header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+		padding: 0 1rem;
+	}
+
+	.back-button {
+		color: #ffffff;
+		text-decoration: none;
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		transition: background-color 0.3s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.back-button:hover {
+		background-color: #333;
+	}
+
+	.page-header h1 {
+		color: #ffffff;
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0;
+		flex: 1;
+		text-align: center;
+		margin-right: 3rem; /* Compensar el botón back */
+	}
+
+	.profile-section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		padding: 0 1rem;
+		gap: 1.5rem;
+	}
+
+	.profile-image {
+		width: 150px;
+		height: 150px;
+		border-radius: 50%;
+		overflow: hidden;
+		background: linear-gradient(135deg, #1a1a1a, #333);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 1rem;
+	}
+
+	.profile-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* Placeholder para cuando no hay imagen */
+	.profile-image:empty::before {
+		content: "CA";
+		font-size: 3rem;
+		font-weight: bold;
+		color: white;
+	}
+
+	.profile-info h2 {
+		color: #ffffff;
+		font-size: 2rem;
+		font-weight: 600;
+		margin: 0 0 0.5rem 0;
+	}
+
+	.subtitle {
+		color: #4fd1c7;
+		font-size: 1.1rem;
+		font-weight: 500;
+		margin: 0 0 0.5rem 0;
+	}
+
+	.tagline {
+		color: #cccccc;
+		font-size: 1rem;
+		margin: 0 0 2rem 0;
+		font-style: italic;
+	}
+
+	.profile-description {
+		max-width: 600px;
+		text-align: left;
+	}
+
+	.profile-description p {
+		color: #cccccc;
+		font-size: 1rem;
+		line-height: 1.6;
+		margin-bottom: 1.5rem;
+	}
+
+	.profile-description p:last-child {
+		margin-bottom: 0;
+	}
+
+	@media (max-width: 768px) {
+		.profile-image {
+			width: 120px;
+			height: 120px;
+		}
+
+		.profile-info h2 {
+			font-size: 1.75rem;
+		}
+
+		.subtitle {
+			font-size: 1rem;
+		}
+
+		.tagline {
+			font-size: 0.9rem;
+		}
+
+		.profile-description {
+			padding: 0 0.5rem;
+		}
+
+		.profile-description p {
+			font-size: 0.95rem;
+		}
+	}
+</style>

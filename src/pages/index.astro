@@ -1,0 +1,90 @@
+---
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import MainLayout from '../layouts/MainLayout.astro';
+import PostCard from '../components/PostCard.astro';
+
+// Posts de ejemplo que coinciden con el diseño de Figma
+const posts = [
+	{
+		title: "The Future of AI in Software Development",
+		description: "Explore how artificial intelligence is reshaping the landscape of software development, from automated testing to code generation.",
+		slug: "future-ai-software-development",
+		image: null
+	},
+	{
+		title: "Mastering Modern Web Frameworks",
+		description: "A comprehensive guide to the most popular web frameworks, including React, Vue, and Angular.",
+		slug: "mastering-modern-web-frameworks",
+		image: null
+	},
+	{
+		title: "Building Scalable APIs with Node.js",
+		description: "Learn best practices for creating robust and scalable APIs using Node.js and modern development patterns.",
+		slug: "building-scalable-apis-nodejs",
+		image: null
+	},
+	{
+		title: "The Rise of WebAssembly",
+		description: "Discover how WebAssembly is revolutionizing web performance and opening new possibilities for web applications.",
+		slug: "rise-of-webassembly",
+		image: null
+	}
+];
+---
+
+<MainLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+	<div class="container">
+		<section class="hero">
+			<h2 class="section-title">Latest Posts</h2>
+		</section>
+		
+		<section class="posts-section">
+			<div class="posts-grid">
+				{posts.map(post => (
+					<PostCard 
+						title={post.title}
+						description={post.description}
+						slug={post.slug}
+						image={post.image}
+					/>
+				))}
+			</div>
+		</section>
+	</div>
+</MainLayout>
+
+<style>
+	.hero {
+		padding: 2rem 0;
+		text-align: center;
+	}
+
+	.section-title {
+		color: #ffffff;
+		font-size: 2rem;
+		font-weight: 600;
+		margin-bottom: 0;
+	}
+
+	.posts-section {
+		padding-bottom: 4rem;
+	}
+
+	.posts-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+
+	@media (max-width: 768px) {
+		.posts-grid {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+		
+		.section-title {
+			font-size: 1.5rem;
+		}
+	}
+</style>
