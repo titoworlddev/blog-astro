@@ -9,35 +9,31 @@ const posts = [
 		title: "The Future of AI in Software Development",
 		description: "Explore how artificial intelligence is reshaping the landscape of software development, from automated testing to code generation.",
 		slug: "future-ai-software-development",
-		image: null
+		image: undefined
 	},
 	{
 		title: "Mastering Modern Web Frameworks",
 		description: "A comprehensive guide to the most popular web frameworks, including React, Vue, and Angular.",
 		slug: "mastering-modern-web-frameworks",
-		image: null
+		image: undefined
 	},
 	{
 		title: "Building Scalable APIs with Node.js",
 		description: "Learn best practices for creating robust and scalable APIs using Node.js and modern development patterns.",
 		slug: "building-scalable-apis-nodejs",
-		image: null
+		image: undefined
 	},
 	{
 		title: "The Rise of WebAssembly",
 		description: "Discover how WebAssembly is revolutionizing web performance and opening new possibilities for web applications.",
 		slug: "rise-of-webassembly",
-		image: null
+		image: undefined
 	}
 ];
 ---
 
-<MainLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+<MainLayout title={SITE_TITLE} description={SITE_DESCRIPTION} pageTitle="Latest Posts">
 	<div class="container">
-		<section class="hero">
-			<h2 class="section-title">Latest Posts</h2>
-		</section>
-		
 		<section class="posts-section">
 			<div class="posts-grid">
 				{posts.map(post => (
@@ -54,20 +50,8 @@ const posts = [
 </MainLayout>
 
 <style>
-	.hero {
-		padding: 2rem 0;
-		text-align: center;
-	}
-
-	.section-title {
-		color: #ffffff;
-		font-size: 2rem;
-		font-weight: 600;
-		margin-bottom: 0;
-	}
-
 	.posts-section {
-		padding-bottom: 4rem;
+		padding: 2rem 0 4rem 0;
 	}
 
 	.posts-grid {

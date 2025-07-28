@@ -36,20 +36,9 @@ const categories = [
 ];
 ---
 
-<MainLayout title="Categorías - Tech Blog" description="Explora artículos por categorías">
+<MainLayout title="Categorías - Tech Blog" description="Explora artículos por categorías" pageTitle="Categorías" showBackButton={true}>
 	<div class="categories-page">
 		<div class="container">
-			<header class="page-header">
-				<button class="menu-button">
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</button>
-				<h1>Categorías</h1>
-			</header>
-
 			<section class="categories-section">
 				<h2>Explora por tema</h2>
 				
@@ -113,38 +102,6 @@ const categories = [
 	.categories-page {
 		min-height: 100vh;
 		padding-top: 1rem;
-	}
-
-	.page-header {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		margin-bottom: 2rem;
-		padding: 0 1rem;
-	}
-
-	.menu-button {
-		background: none;
-		border: none;
-		color: #ffffff;
-		cursor: pointer;
-		padding: 0.5rem;
-		border-radius: 0.5rem;
-		transition: background-color 0.3s ease;
-	}
-
-	.menu-button:hover {
-		background-color: #333;
-	}
-
-	.page-header h1 {
-		color: #ffffff;
-		font-size: 1.5rem;
-		font-weight: 600;
-		margin: 0;
-		flex: 1;
-		text-align: center;
-		margin-right: 3rem; /* Compensar el botón del menú */
 	}
 
 	.categories-section h2 {

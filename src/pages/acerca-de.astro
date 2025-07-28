@@ -3,19 +3,9 @@ import MainLayout from '../layouts/MainLayout.astro';
 import Image from 'astro/components/Image.astro';
 ---
 
-<MainLayout title="Acerca de - Cristian Arias" description="Conoce más sobre Cristian Arias, Desarrollador FullStack">
+<MainLayout title="Acerca de - Cristian Arias" description="Conoce más sobre Cristian Arias, Desarrollador FullStack" pageTitle="Acerca de" showBackButton={true}>
 	<div class="about-page">
 		<div class="container">
-			<header class="page-header">
-				<a href="/" class="back-button">
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</a>
-				<h1>Acerca de</h1>
-			</header>
-
 			<section class="profile-section">
 				<div class="profile-image">
 					<Image src="https://avatars.githubusercontent.com/u/70041483?s=400&u=920f20b4c3794b21563fb9d139c38ce5870d63f9&v=4" alt="Cristian Arias" width={150} height={150} />
