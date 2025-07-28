@@ -2,12 +2,10 @@
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import MainLayout from '../layouts/MainLayout.astro';
 import PostCard from '../components/PostCard.astro';
-import { getCollection } from 'astro:content';
+import { getAllPosts } from '../utils/posts';
 
-// Get all blog posts
-const allPosts = await getCollection('blog');
-// Sort posts by publication date (newest first)
-const posts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+// Get all blog posts from all year folders, sorted by date (newest first)
+const posts = await getAllPosts();
 ---
 
 <MainLayout title={SITE_TITLE} description={SITE_DESCRIPTION} pageTitle="Tech Blog">

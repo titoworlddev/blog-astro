@@ -1,7 +1,7 @@
 ---
-import { getCollection } from 'astro:content';
 import MainLayout from '../../layouts/MainLayout.astro';
 import PostCard from '../../components/PostCard.astro';
+import { getPostsByCategory } from '../../utils/posts';
 
 export async function getStaticPaths() {
 	const categories = [
@@ -39,32 +39,8 @@ export async function getStaticPaths() {
 
 const { category } = Astro.props;
 
-// Get all blog posts for this category
-const allPosts = await getCollection('blog');
-
-// Filter posts by category with robust comparison
-const categoryPosts = allPosts
-	.filter(post => {
-		if (!post.data.category) return false;
-		
-		const postCategory = String(post.data.category).trim().toLowerCase();
-		const targetCategory = String(category.slug).trim().toLowerCase();
-		
-		// Also try without quotes in case they're included
-		const cleanPostCategory = postCategory.replace(/['"`]/g, '');
-		const cleanTargetCategory = targetCategory.replace(/['"`]/g, '');
-		
-		return cleanPostCategory === cleanTargetCategory;
-	})
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
-// Debug info (will show in browser console)
-if (typeof window !== 'undefined') {
-	console.log('Category:', category.slug);
-	console.log('Total posts:', allPosts.length);
-	console.log('Filtered posts:', categoryPosts.length);
-	console.log('Posts with categories:', allPosts.map(p => ({ id: p.id, category: p.data.category })));
-}
+// Get all blog posts for this category from all year folders
+const categoryPosts = await getPostsByCategory(category.slug);
 ---
 
 <MainLayout 
