@@ -5,54 +5,33 @@ import { getAllPosts } from '../utils/posts';
 import type { CollectionEntry } from 'astro:content';
 
 // Get search query from URL parameters
-const url = Astro.url;
-const searchQuery = url.searchParams.get('q') || '';
+const searchQuery = Astro.url.searchParams.get('q')?.trim() || '';
 
-// Get all posts for searching
-const allPosts = await getAllPosts();
+// Debug the search query
+console.log('DEBUG: Raw URL:', Astro.url.href);
+console.log('DEBUG: searchQuery value:', JSON.stringify(searchQuery));
+console.log('DEBUG: searchQuery length:', searchQuery.length);
+console.log('DEBUG: searchQuery truthy?', !!searchQuery);
 
-// Debug logging
-console.log('Search query:', searchQuery);
-console.log('Total posts available:', allPosts.length);
-console.log('Posts sample:', allPosts.slice(0, 2).map(p => ({ id: p.id, title: p.data.title, category: p.data.category })));
+// Get all posts using the same function as Header (this works!)
+const sortedPosts = await getAllPosts();
 
 // Filter posts based on search query
 let searchResults: CollectionEntry<'blog'>[] = [];
-if (searchQuery.trim()) {
-	const query = searchQuery.toLowerCase().trim();
-	console.log('Searching for:', query);
-	
-	searchResults = allPosts.filter(post => {
-		if (!post || !post.data) {
-			console.warn('Invalid post:', post);
-			return false;
-		}
+let hasSearched = false;
+
+if (searchQuery && searchQuery.length > 0) {
+	hasSearched = true;
+	const query = searchQuery.toLowerCase();
+	searchResults = sortedPosts.filter(post => {
+		const title = post.data.title.toLowerCase();
+		const description = post.data.description.toLowerCase();
+		const category = post.data.category.toLowerCase();
 		
-		const title = String(post.data.title || '').toLowerCase();
-		const description = String(post.data.description || '').toLowerCase();
-		const category = String(post.data.category || '').toLowerCase();
-		
-		const titleMatch = title.includes(query);
-		const descMatch = description.includes(query);
-		const catMatch = category.includes(query);
-		
-		const matches = titleMatch || descMatch || catMatch;
-		
-		if (matches) {
-			console.log('Match found:', {
-				id: post.id,
-				title: post.data.title,
-				category: post.data.category,
-				titleMatch,
-				descMatch,
-				catMatch
-			});
-		}
-		
-		return matches;
+		return title.includes(query) || 
+		       description.includes(query) || 
+		       category.includes(query);
 	});
-	
-	console.log('Search results:', searchResults.length);
 }
 ---
 
@@ -67,11 +46,19 @@ if (searchQuery.trim()) {
 			<section class="search-section">
 				<div class="search-header">
 					<h2>Resultados de búsqueda</h2>
-					{searchQuery && (
+					{hasSearched && (
 						<p class="search-query">
 							Buscando: <strong>"{searchQuery}"</strong>
 						</p>
 					)}
+					<!-- DEBUG INFO -->
+					<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+						<strong>DEBUG:</strong><br/>
+						Query: "{searchQuery}"<br/>
+						Has Searched: {hasSearched}<br/>
+						Results Count: {searchResults.length}<br/>
+						Total Posts: {sortedPosts.length}
+					</div>
 				</div>
 
 				<div class="search-form-container">
@@ -94,7 +81,7 @@ if (searchQuery.trim()) {
 					</form>
 				</div>
 
-				{searchQuery ? (
+				{hasSearched ? (
 					<div class="search-results">
 						{searchResults.length > 0 ? (
 							<>
@@ -127,7 +114,7 @@ if (searchQuery.trim()) {
 				) : (
 					<div class="search-placeholder">
 						<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5 2C5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 						</svg>
 						<h3>¿Qué estás buscando?</h3>
 						<p>Busca posts por título, descripción o categoría</p>
@@ -137,6 +124,145 @@ if (searchQuery.trim()) {
 		</div>
 	</div>
 </MainLayout>
+
+<script>
+	// Client-side search implementation
+	document.addEventListener('DOMContentLoaded', function() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const clientQuery = urlParams.get('q');
+		
+		console.log('Client-side query:', clientQuery);
+		
+		if (clientQuery && clientQuery.trim()) {
+			performClientSearch(clientQuery.trim());
+		}
+	});
+	
+	function performClientSearch(query: string): void {
+		console.log('Performing client-side search for:', query);
+		
+		// Update search input
+		const searchInput = document.querySelector('input[name="q"]') as HTMLInputElement;
+		if (searchInput) {
+			searchInput.value = query;
+		}
+		
+		// Update debug info
+		const debugDiv = document.querySelector('.debug-info') as HTMLElement;
+		if (debugDiv) {
+			debugDiv.innerHTML = `
+				<strong>DEBUG (Client-side):</strong><br/>
+				Query: "${query}"<br/>
+				Has Searched: true<br/>
+				Results Count: <span id="results-count">Searching...</span><br/>
+				Total Posts: <span id="total-posts">Loading...</span>
+			`;
+		}
+		
+		// Show search query
+		const queryDisplay = document.querySelector('.search-query strong');
+		if (queryDisplay) {
+			queryDisplay.textContent = `"${query}"`;
+		}
+		
+		// Show search query section
+		const searchQuerySection = document.querySelector('.search-query') as HTMLElement;
+		if (searchQuerySection) {
+			searchQuerySection.style.display = 'block';
+		}
+		
+		// Fetch posts and perform search
+		fetch('/api/posts.json')
+			.then(response => response.json())
+			.then((posts: any[]) => {
+				console.log('Loaded posts for client search:', posts.length);
+				
+				// Update total posts count
+				const totalPostsSpan = document.getElementById('total-posts');
+				if (totalPostsSpan) totalPostsSpan.textContent = posts.length.toString();
+				
+				// Filter posts
+				const queryLower = query.toLowerCase();
+				const results = posts.filter((post: any) => {
+					return post.data.title.toLowerCase().includes(queryLower) ||
+					       post.data.description.toLowerCase().includes(queryLower) ||
+					       post.data.category.toLowerCase().includes(queryLower);
+				});
+				
+				console.log('Client search results:', results.length);
+				
+				// Update results count
+				const resultsCountSpan = document.getElementById('results-count');
+				if (resultsCountSpan) resultsCountSpan.textContent = results.length.toString();
+				
+				// Display results
+				displaySearchResults(results);
+			})
+			.catch(error => {
+				console.error('Error fetching posts:', error);
+				// Show error message
+				const resultsCountSpan = document.getElementById('results-count');
+				if (resultsCountSpan) resultsCountSpan.textContent = 'Error';
+			});
+	}
+	
+	function displaySearchResults(results: any[]): void {
+		const placeholder = document.querySelector('.search-placeholder') as HTMLElement;
+		const existingResults = document.querySelector('.search-results');
+		
+		// Remove placeholder
+		if (placeholder) placeholder.style.display = 'none';
+		
+		// Remove existing results
+		if (existingResults) existingResults.remove();
+		
+		// Create results container
+		const resultsContainer = document.createElement('div');
+		resultsContainer.className = 'search-results';
+		
+		if (results.length > 0) {
+			resultsContainer.innerHTML = `
+				<p class="results-count">
+					${results.length} resultado${results.length !== 1 ? 's' : ''} encontrado${results.length !== 1 ? 's' : ''}
+				</p>
+				<div class="posts-grid">
+					${results.map((post: any) => `
+						<article class="post-card">
+							<a href="/blog/${post.id}" class="post-link">
+								<div class="post-content">
+									<h3 class="post-title">${post.data.title}</h3>
+									<p class="post-description">${post.data.description}</p>
+									<div class="post-meta">
+										<span class="post-category">
+											<a href="/categoria/${post.data.category}">${post.data.category}</a>
+										</span>
+										<span class="post-date">${new Date(post.data.pubDate).toLocaleDateString('es-ES')}</span>
+									</div>
+								</div>
+							</a>
+						</article>
+					`).join('')}
+				</div>
+			`;
+		} else {
+			resultsContainer.innerHTML = `
+				<div class="no-results">
+					<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					<h3>No se encontraron resultados</h3>
+					<p>Intenta con otros términos de búsqueda</p>
+				</div>
+			`;
+		}
+		
+		// Insert results after the search form
+		const searchForm = document.querySelector('.search-form-container');
+		if (searchForm) {
+			searchForm.insertAdjacentElement('afterend', resultsContainer);
+		}
+	}
+</script>
 
 <style>
 	.search-page {
