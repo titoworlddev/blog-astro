@@ -2,7 +2,7 @@
 import MainLayout from '../layouts/MainLayout.astro';
 ---
 
-<MainLayout title="Contacto - Tech Blog" description="Ponte en contacto con nosotros" pageTitle="Contacto">
+<MainLayout title="Contacto - Tech Blog" description="Ponte en contacto con nosotros" pageTitle="Contacto" showBackButton={true}>
 	<div class="contact-page">
 		<div class="container">
 			<section class="contact-section">
@@ -178,7 +178,6 @@ import MainLayout from '../layouts/MainLayout.astro';
 	.submit-button:hover {
 		background-color: #6ee7dd;
 		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(79, 209, 199, 0.3);
 	}
 
 	.submit-button:active {
